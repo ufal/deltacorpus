@@ -80,15 +80,21 @@ leave_one_out:
 	./leave1out.pl $(UD_LANGUAGES) $(UD2(LANGUAGES)
 
 svm_tag:
+	@mkdir -p data/predicted
+	@mkdir -p data/hpredicted
+	@for l in $(HAMLEDT_LANGUAGES); do \
+		echo "./svm.py data/features/htrain_leave1out/$$l.feat data/features/hdtest/$$l.feat data/hpredicted/$$l.pred" \
+			> log/htag_$$l.sh; \
+		qsub -hard -l mf=30g -l act_mem_free=30g -o log/htag_$$l.o -e log/htag_$$l.e -cwd log/htag_$$l.sh; \
+	done
 	@for l in $(UD_LANGUAGES) $(UD2(LANGUAGES); do \
-	    echo "./svm.py data/features/train_leave1out/$$l.feat data/features/dtest/$$l.feat data/predicted/$$l.pred" \
-	         > log/tag_$$l.sh; \
+		echo "./svm.py data/features/train_leave1out/$$l.feat data/features/dtest/$$l.feat data/predicted/$$l.pred" \
+			> log/tag_$$l.sh; \
 		qsub -hard -l mf=30g -l act_mem_free=30g -o log/tag_$$l.o -e log/tag_$$l.e -cwd log/tag_$$l.sh; \
-    done
+	done
 
 output:
 	@for l in $(UD_LANGUAGES) $(UD2(LANGUAGES); do \
 		echo -n "$$l "; \
 		./merge_output.pl data/ud/dtest/$$l.conll data/predicted/$$l.pred > data/predicted/$$l.conll; \
 	done
-
