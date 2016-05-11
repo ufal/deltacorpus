@@ -91,7 +91,7 @@ ctrain:
 	done
 	@echo
 	@echo -n "csla: "
-	@for l in bg cs ; do \
+	@for l in bg cs sl ; do \
 		cat data/features/htrain/$$l.feat | head -50000 >> data/features/ctrain/csla.feat; \
 		echo -n "$$l "; \
 	done
@@ -115,7 +115,7 @@ ctrain:
 	done
 	@echo
 	@echo -n "cagl: "
-	@for l in hu tr cs de el sv ; do \
+	@for l in hu fi et tr eu cs sv ; do \
 		cat data/features/htrain/$$l.feat | head -50000 >> data/features/ctrain/cagl.feat; \
 		echo -n "$$l "; \
 	done
