@@ -6,9 +6,9 @@
 # Exclude ja,ta because HamleDT data is romanized (the text in the original script is not available).
 # Exclude nl because there are joined multi-word tokens and their POS tag is always unknown.
 # Exclude ru because it does not contain pronouns (they are merged with nouns and adjectives).
-# Exclude tr because it contains too many empty nodes (related to derivational morphology).
+# We may also want to exclude tr because it contains too many empty nodes (related to derivational morphology); but it was included in c7 (LREC paper).
 HAMLEDT_DIR = /net/projects/tectomt_shared/data/archive/hamledt/2.0_2014-05-24_treex-r12700
-HAMLEDT_LANGUAGES = bg ca cs da de el en es et eu fa fi hi hu it la pt ro sk sl sv
+HAMLEDT_LANGUAGES = bg ca cs da de el en es et eu fa fi hi hu it la pt ro sk sl sv tr
 
 UD_DIR = /net/data/universal-dependencies-1.2
 UD_LANGUAGES = bg cs da de el en et eu fa fi fi_ftb fr ga he hi hr hu id it la la_itt la_proiel no pl ro sl sv ta
@@ -17,7 +17,7 @@ UD2_DIR = /ha/work/people/zeman/unidep
 UD2_LANGUAGES = ca es pt pt_br
 
 W2C_DIR = /net/data/W2C/W2C_WEB/2011-08
-W2C_LANGUAGES = bul cat ces dan deu ell eng est eus fas fin fra gle heb hin hrv hun ind ita lat nor pol por ron slk slv spa swe tam
+W2C_LANGUAGES = bul cat ces dan deu ell eng est eus fas fin fra gle heb hin hrv hun ind ita lat nor pol por ron slk slv spa swe tam tur
 
 w2c_to_conll:
 	@mkdir -p data/w2c
@@ -78,6 +78,48 @@ generate_features:
 leave_one_out:
 	./leave1out.pl hamledt $(HAMLEDT_LANGUAGES)
 	./leave1out.pl $(UD_LANGUAGES) $(UD2(LANGUAGES)
+
+# Prepares custom mixes of training data, such as the c7 described in our LREC 2016 paper.
+# c7 ... bg ca de el hi hu tr (from HamleDT 2.0)
+ctrain:
+	@rm -rf data/features/ctrain
+	@mkdir -p data/features/ctrain
+	@echo -n "c7: "
+	@for l in bg ca de el hi hu tr ; do \
+		cat data/features/htrain/$$l.feat | head -50000 >> data/features/ctrain/c7.feat; \
+		echo -n "$$l "; \
+	done
+	@echo
+	@echo -n "csla: "
+	@for l in bg cs ; do \
+		cat data/features/htrain/$$l.feat | head -50000 >> data/features/ctrain/csla.feat; \
+		echo -n "$$l "; \
+	done
+	@echo
+	@echo -n "cger: "
+	@for l in de en sv ; do \
+		cat data/features/htrain/$$l.feat | head -50000 >> data/features/ctrain/cger.feat; \
+		echo -n "$$l "; \
+	done
+	@echo
+	@echo -n "crom: "
+	@for l in ca it pt ; do \
+		cat data/features/htrain/$$l.feat | head -50000 >> data/features/ctrain/crom.feat; \
+		echo -n "$$l "; \
+	done
+	@echo
+	@echo -n "cine: "
+	@for l in bg ca cs de el hi pt ; do \
+		cat data/features/htrain/$$l.feat | head -50000 >> data/features/ctrain/cine.feat; \
+		echo -n "$$l "; \
+	done
+	@echo
+	@echo -n "cagl: "
+	@for l in hu tr cs de el sv ; do \
+		cat data/features/htrain/$$l.feat | head -50000 >> data/features/ctrain/cagl.feat; \
+		echo -n "$$l "; \
+	done
+	@echo
 
 svm_tag:
 	@mkdir -p data/predicted
