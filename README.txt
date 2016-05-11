@@ -1,3 +1,15 @@
+Deltacorpus: corpus of texts in many languages tagged by a delexicalized tagger
+
+David Mareček, Zhiwei Yu, Dan Zeman, Zdeněk Žabokrtský / ÚFAL MFF UK
+
+http://ufal.mff.cuni.cz/deltacorpus
+http://hdl.handle.net/11234/1-1662
+https://github.com/ufal/deltacorpus
+
+
+------------------------------------------------------------------------------
+Legacy README (Zhiwei):
+
 Here I will introduce how my project work.
 1. feature calculation:
     the main feature calculation source file is /zhiwai/pos/model/tools/get_featurefromw2c.py.I write both 
