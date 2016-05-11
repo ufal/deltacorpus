@@ -1,0 +1,3 @@
+python -m cProfile -o result.out -s cumulative test.py
+python -m pstats result.out 
+python gprof2dot.py -f pstats result.out | dot -Tpng -o result.png
