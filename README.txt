@@ -5,6 +5,7 @@ David Mareček, Zhiwei Yu, Dan Zeman, Zdeněk Žabokrtský / ÚFAL MFF UK
 http://ufal.mff.cuni.cz/deltacorpus
 http://hdl.handle.net/11234/1-1662
 https://github.com/ufal/deltacorpus
+https://wiki.ufal.ms.mff.cuni.cz/user:zeman:deltacorpus
 
 
 ------------------------------------------------------------------------------
