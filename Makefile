@@ -135,6 +135,16 @@ svm_tag:
 		qsub -hard -l mf=30g -l act_mem_free=30g -o log/tag_$$l.o -e log/tag_$$l.e -cwd log/tag_$$l.sh; \
 	done
 
+svm_ctag:
+	@mkdir -p data/cpredicted
+	@for l in $(HAMLEDT_LANGUAGES); do \
+		for c in c7 csla cger crom cine cagl; do \
+			echo "./svm.py data/features/ctrain/$$c.feat data/features/hdtest/$$l.feat data/cpredicted/$$l.pred" \
+				> log/$${c}_$$l.sh; \
+			qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$${c}_$$l.o -cwd log/$${c}_$$l.sh; \
+		done; \
+	done
+
 output:
 	@for l in $(UD_LANGUAGES) $(UD2(LANGUAGES); do \
 		echo -n "$$l "; \
