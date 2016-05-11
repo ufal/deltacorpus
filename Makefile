@@ -17,10 +17,10 @@ UD2_DIR = /ha/work/people/zeman/unidep
 UD2_LANGUAGES = ca es pt pt_br
 
 W2C_DIR = /net/data/W2C/W2C_WEB/2011-08
-W2C_LANGUAGES = bul cat ces dan deu ell eng est eus fas fin fra gle heb hin hrv hun ind ita lat nor pol por ron slv spa swe tam
+W2C_LANGUAGES = bul cat ces dan deu ell eng est eus fas fin fra gle heb hin hrv hun ind ita lat nor pol por ron slk slv spa swe tam
 
 w2c_to_conll:
-	mkdir -p data/w2c
+	@mkdir -p data/w2c
 	@for l in $(W2C_LANGUAGES); do \
 		zcat $(W2C_DIR)/$$l.txt.gz | head -1000000 | ./text_to_conll.pl | ./filter.pl $$l > data/w2c/$$l.conll; \
 		echo -n "$$l "; \
@@ -28,8 +28,8 @@ w2c_to_conll:
 	@echo
 
 conllu_to_conll:
-	mkdir -p data/ud/train
-	mkdir -p data/ud/dtest
+	@mkdir -p data/ud/train
+	@mkdir -p data/ud/dtest
 	@for l in $(UD_LANGUAGES); do \
 		cat $(UD_DIR)/*/$$l-ud-train*.conllu | ./clean_conllu.pl > data/ud/train/$$l.conll; \
 		cat $(UD_DIR)/*/$$l-ud-dev*.conllu | ./clean_conllu.pl > data/ud/dtest/$$l.conll; \
@@ -43,8 +43,8 @@ conllu_to_conll:
 	@echo
 
 hamledt2_to_conll:
-	mkdir -p data/hamledt2/train
-	mkdir -p data/hamledt2/dtest
+	@mkdir -p data/hamledt2/train
+	@mkdir -p data/hamledt2/dtest
 	@for l in $(HAMLEDT_LANGUAGES); do \
 		zcat $(HAMLEDT_DIR)/$$l/stanford/train/*.conll.gz > data/hamledt2/train/$$l.conll; \
 		zcat $(HAMLEDT_DIR)/$$l/stanford/test/*.conll.gz > data/hamledt2/dtest/$$l.conll; \
@@ -53,11 +53,11 @@ hamledt2_to_conll:
 	@echo
 
 generate_features:
-	mkdir -p data/features/train
-	mkdir -p data/features/dtest
-	mkdir -p data/features/htrain
-	mkdir -p data/features/hdtest
-	mkdir -p log
+	@mkdir -p data/features/train
+	@mkdir -p data/features/dtest
+	@mkdir -p data/features/htrain
+	@mkdir -p data/features/hdtest
+	@mkdir -p log
 	@for l in $(HAMLEDT_LANGUAGES); do \
 		./fill_langcode.pl "python get_featurefromw2c.py data/hamledt2/train/XX.conll data/w2c/XXX.conll \
 			20000000 data/features/htrain/XX.feat" $$l > log/hfeatures_$$l.sh; \
@@ -73,7 +73,10 @@ generate_features:
 		qsub -hard -l mf=10g -l act_mem_free=10g -o log -e log -cwd log/features_$$l.sh; \
 	done
 
+# Prepares training data for the classifier. For each target language the training data of this language is left out.
+# Training data of all other languages are concatenated (the first 30,000 tokens per language only).
 leave_one_out:
+	./leave1out.pl hamledt $(HAMLEDT_LANGUAGES)
 	./leave1out.pl $(UD_LANGUAGES) $(UD2(LANGUAGES)
 
 svm_tag:
