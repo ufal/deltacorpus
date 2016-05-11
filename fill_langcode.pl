@@ -17,5 +17,5 @@ if ($mapping{$code}) {
     print "$string\n";
 }
 else {
-    print STDERR "Language $language was is not known.\n";
+    print STDERR "Language $language is unknown.\n";
 }
