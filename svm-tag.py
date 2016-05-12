@@ -33,7 +33,8 @@ def test():
     predictYDic = dict()
     testX = np.array(testFeatDic['feature'])[:,:17]
     testY = testFeatDic['label']
-    testX_scaled = scaler.transform(testX)
+    scaler = preprocessing.StandardScaler().fit(testX)
+    testX_scaled = scaler.transform(np.array(testX))
     predictY = clf.predict(testX_scaled)
     correctCnt = 0
     for index,labelY in enumerate(predictY):
@@ -46,20 +47,20 @@ def test():
         tmpfb.write(testFeatDic['wordform'][index] + '\t' + testY[index] + '\t' + '\t' + labelY + '\n')
         tmpfb.flush()
     ###!!!???
-    oovfile = sys.argv[1] + '.oov'
-    oovcorrectcnt = 0
-    oovtotalcnt = 0
-    for line in open(oovfile):
-        oovtotalcnt += 1
-        word,pos = line.strip().split('\t')[0],line.strip().split('\t')[1]
-        if __digitPatt.match(word) and pos == 'NUM':
-            oovcorrectcnt += 1
-            tmpfb.write(word + '\t' + pos + '\t' + 'NUM' + '\n')
-            tmpfb.flush()
-            continue
-        elif pos == 'NOUN':
-            oovcorrectcnt += 1
-        tmpfb.write(word + '\t' + pos + '\t' + 'NOUN' + '\n')
+    #oovfile = sys.argv[1] + '.oov'
+    #oovcorrectcnt = 0
+    #oovtotalcnt = 0
+    #for line in open(oovfile):
+    #    oovtotalcnt += 1
+    #    word,pos = line.strip().split('\t')[0],line.strip().split('\t')[1]
+    #    if __digitPatt.match(word) and pos == 'NUM':
+    #        oovcorrectcnt += 1
+    #        tmpfb.write(word + '\t' + pos + '\t' + 'NUM' + '\n')
+    #        tmpfb.flush()
+    #        continue
+    #    elif pos == 'NOUN':
+    #        oovcorrectcnt += 1
+    #    tmpfb.write(word + '\t' + pos + '\t' + 'NOUN' + '\n')
     tmpfb.close()
 
 
