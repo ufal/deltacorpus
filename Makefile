@@ -135,6 +135,13 @@ svm_tag:
 		qsub -hard -l mf=30g -l act_mem_free=30g -o log/tag_$$l.o -e log/tag_$$l.e -cwd log/tag_$$l.sh; \
 	done
 
+# Train a model that will be reused to tag multiple languages.
+# Save the model as a Python pickle file. Do not do the tagging.
+svm_ctrain:
+	@mkdir -p data/models
+	echo "./svm-train.py data/features/ctrain/c7.feat data/models/svm-c7.p" > log/svm-c7-train.sh
+	qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/svm-c7-train.o -cwd log/svm-c7-train.sh
+
 svm_ctag:
 	@mkdir -p data/cpredicted
 	@for l in $(HAMLEDT_LANGUAGES); do \
