@@ -148,8 +148,7 @@ svm_ctag:
 	@mkdir -p data/cpredicted
 	@for l in $(HAMLEDT_LANGUAGES); do \
 		for c in c7 csla cger crom cine cagl; do \
-			echo "./svm.py data/features/ctrain/$$c.feat data/features/hdtest/$$l.feat data/cpredicted/$$l.pred" \
-				> log/$${c}_$$l.sh; \
+			echo "./svm-tag.py data/models/svm-$$c.p data/features/hdtest/$$l.feat data/cpredicted/$$c-$$l.pred" > log/$${c}_$$l.sh; \
 			qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$${c}_$$l.o -cwd log/$${c}_$$l.sh; \
 		done; \
 	done
