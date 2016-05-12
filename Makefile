@@ -139,8 +139,10 @@ svm_tag:
 # Save the model as a Python pickle file. Do not do the tagging.
 svm_ctrain:
 	@mkdir -p data/models
-	echo "./svm-train.py data/features/ctrain/c7.feat data/models/svm-c7.p" > log/svm-c7-train.sh
-	qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/svm-c7-train.o -cwd log/svm-c7-train.sh
+	@for c in c7 csla cger crom cine cagl; do \
+		echo "./svm-train.py data/features/ctrain/$$c.feat data/models/svm-$$c.p" > log/svm-$$c-train.sh; \
+		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/svm-$${c}-train.o -cwd log/svm-$$c-train.sh; \
+	done
 
 svm_ctag:
 	@mkdir -p data/cpredicted
