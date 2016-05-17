@@ -211,13 +211,14 @@ svm_ctag:
 	@mkdir -p data/cpredicted
 	@for l in $(UD_LANGUAGES); do \
 		for c in c7 csla cger crom cine cagl; do \
-			echo "./svm-tag.py data/models/svm-$$c.p data/features/hdtest/$$l.feat data/cpredicted/$$c-$$l.pred" > log/$$c-$$l.sh; \
+			echo "./svm-tag.py data/models/svm-$$c.p data/features/dtest/$$l.feat data/cpredicted/$$c-$$l.pred" > log/$$c-$$l.sh; \
+			echo "./merge_output.pl data/ud/dtest/$$l.conll data/cpredicted/$$c-$$l.pred > data/cpredicted/$$c-$$l.conll" >> log/$$c-$$l.sh; \
 			qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l.o -cwd log/$$c-$$l.sh; \
 		done; \
 	done
 
 output:
-	@for l in $(UD_LANGUAGES) $(UD2(LANGUAGES); do \
+	@for l in $(UD_LANGUAGES); do \
 		echo -n "$$l "; \
 		./merge_output.pl data/ud/dtest/$$l.conll data/predicted/$$l.pred > data/predicted/$$l.conll; \
 	done
