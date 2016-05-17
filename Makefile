@@ -17,12 +17,19 @@ UD_DIR = /net/data/universal-dependencies-1.3
 UD_LANGUAGES = ar bg ca cs cs_cac cs_cltt da de el en en_lines es es_ancora et eu fa fi fi_ftb fr ga gl he hi hr hu id it kk la la_ittb la_proiel lv nl nl_lassysmall no pl pt pt_br ro ru ru_syntagrus sl sl_sst sv sv_lines ta tr
 
 W2C_DIR = /net/data/W2C/W2C_WEB/2011-08
-W2C_LANGUAGES = ara bul cat ces dan deu ell eng est eus fas fin fra gle glg heb hin hrv hun ind ita lat lav nld nor pol por ron rus slk slv spa swe tam tur
+# Only the languages represented in either HamleDT or UD:
+#W2C_LANGUAGES = ara bul cat ces dan deu ell eng est eus fas fin fra gle glg heb hin hrv hun ind ita lat lav nld nor pol por ron rus slk slv spa swe tam tur
+# All 107 languages included in Deltacorpus:
+# (note that 'als/gsw' requires special treatment because it is marked 'als' in W2C but the correct code is 'gsw')
+W2C_LANGUAGES_EXCEPT_GSW = bel bos bul ces hbs hrv hsb mkd pol rus slk slv srp ukr lav lit afr dan deu eng fao fry isl lim ltz nds nld nno nor sco swe yid arg ast cat fra glg hat ita lat lmo nap pms por ron spa vec wln bre cym gla gle ell hye sqi diq fas glk kur tgk ben bpy guj hif hin mar nep urd amh ara arz heb est fin hun eus kat chv aze tur uzb kaz tat sah kor mon tel kan mal tam new vie ind jav mlg mri msa pam sun tgl war swa epo ido ina vol
+W2C_LANGUAGES = gsw $(W2C_LANGUAGES_EXCEPT_GSW)
 
 w2c_to_conll:
 	@mkdir -p data/w2c
-	@for l in $(W2C_LANGUAGES); do \
-		zcat $(W2C_DIR)/$$l.txt.gz | head -1000000 | ./text_to_conll.pl | ./filter.pl $$l > data/w2c/$$l.conll; \
+	@zcat $(W2C_DIR)/als.txt.gz | ./text_to_conll.pl | ./filter.pl gsw | head -1000000 > data/w2c/gsw.conll
+	@echo -n "als=>gsw "
+	@for l in $(W2C_LANGUAGES_EXCEPT_GSW); do \
+		zcat $(W2C_DIR)/$$l.txt.gz | ./text_to_conll.pl | ./filter.pl $$l | head -1000000 > data/w2c/$$l.conll; \
 		echo -n "$$l "; \
 	done
 	@echo

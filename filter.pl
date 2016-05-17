@@ -13,7 +13,7 @@ binmode(STDERR, ':utf8');
 my %l2s =
 (
     'afr' => 'Latin',
-    'als' => 'Latin',
+    'als' => 'Latin', 'gsw' => 'Latin', # 'als' is used in W2C but it is not the correct code; in Deltacorpus we use 'gsw' instead.
     'amh' => 'Ethiopic',
     'ara' => 'Arabic',
     'arg' => 'Latin',
