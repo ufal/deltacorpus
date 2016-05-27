@@ -82,7 +82,7 @@ generate_wfeatures:
 	@mkdir -p data/features/w2c
 	@mkdir -p log
 	@for l in $(W2C_LANGUAGES); do \
-		python get_featurefromw2c.py dummy.conll data/w2c/$$l.conll 20000000 data/features/w2c/$$l.feat > log/wfeatures_$$l.sh; \
+		python get_featurefromw2c.py data/w2c/$$l.conll data/w2c/$$l.conll 20000000 data/features/w2c/$$l.feat > log/wfeatures_$$l.sh; \
 		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=10g -l act_mem_free=10g -j yes -o log -cwd log/wfeatures_$$l.sh; \
 	done
 
