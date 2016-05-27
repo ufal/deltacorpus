@@ -78,6 +78,14 @@ generate_features:
 		qsub -hard -l mf=10g -l act_mem_free=10g -o log -e log -cwd log/features_$$l.sh; \
 	done
 
+generate_wfeatures:
+	@mkdir -p data/features/w2c
+	@mkdir -p log
+	@for l in $(W2C_LANGUAGES); do \
+		python get_featurefromw2c.py dummy.conll data/w2c/$$l.conll 20000000 data/features/w2c/$$l.feat > log/wfeatures_$$l.sh; \
+		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=10g -l act_mem_free=10g -j yes -o log -cwd log/wfeatures_$$l.sh; \
+	done
+
 # Prepares training data for the classifier. For each target language the training data of this language is left out.
 # Training data of all other languages are concatenated (the first 30,000 tokens per language only).
 leave_one_out:
