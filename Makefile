@@ -21,7 +21,15 @@ W2C_DIR = /net/data/W2C/W2C_WEB/2011-08
 #W2C_LANGUAGES = ara bul cat ces dan deu ell eng est eus fas fin fra gle glg heb hin hrv hun ind ita lat lav nld nor pol por ron rus slk slv spa swe tam tur
 # All 107 languages included in Deltacorpus:
 # (note that 'als/gsw' requires special treatment because it is marked 'als' in W2C but the correct code is 'gsw')
-W2C_LANGUAGES_EXCEPT_GSW = bel bos bul ces hbs hrv hsb mkd pol rus slk slv srp ukr lav lit afr dan deu eng fao fry isl lim ltz nds nld nno nor sco swe yid arg ast cat fra glg hat ita lat lmo nap pms por ron spa vec wln bre cym gla gle ell hye sqi diq fas glk kur tgk ben bpy guj hif hin mar nep urd amh ara arz heb est fin hun eus kat chv aze tur uzb kaz tat sah kor mon tel kan mal tam new vie ind jav mlg mri msa pam sun tgl war swa epo ido ina vol
+W2C_BALTOSLAVIC_LANGUAGES = bel bos bul ces hbs hrv hsb mkd pol rus slk slv srp ukr lav lit
+W2C_GERMANIC_LANGUAGES_EXCEPT_GSW = afr dan deu eng fao fry isl lim ltz nds nld nno nor sco swe yid
+W2C_GERMANIC_LANGUAGES = gsw $(W2C_GERMANIC_LANGUAGES_EXCEPT_GSW)
+W2C_ROMANCE_LANGUAGES = arg ast cat fra glg hat ita lat lmo nap pms por ron spa vec wln
+# We do not have any specific model for Semitic languages and we will process them together with Indo-European.
+W2C_INDO_EUROPEAN_LANGUAGES = bre cym gla gle ell hye sqi diq fas glk kur tgk ben bpy guj hif hin mar nep urd amh ara arz heb epo ido ina vol
+W2C_AGGLUTINATING_LANGUAGES = est fin hun eus kat chv aze tur uzb kaz tat sah kor mon tel kan mal tam
+W2C_OTHER_LANGUAGES = new vie ind jav mlg mri msa pam sun tgl war swa
+W2C_LANGUAGES_EXCEPT_GSW = $(W2C_BALTOSLAVIC_LANGUAGES) $(W2C_GERMANIC_LANGUAGES_EXCEPT_GSW) $(W2C_ROMANCE_LANGUAGES) $(W2C_INDO_EUROPEAN_LANGUAGES) $(W2C_AGGLUTINATING_LANGUAGES) new vie ind jav mlg mri msa pam sun tgl war swa epo ido ina vol
 W2C_LANGUAGES = gsw $(W2C_LANGUAGES_EXCEPT_GSW)
 
 w2c_to_conll:
@@ -223,6 +231,39 @@ svm_ctag:
 			echo "./merge_output.pl data/ud/dtest/$$l.conll data/cpredicted/$$c-$$l.pred > data/cpredicted/$$c-$$l.conll" >> log/$$c-$$l.sh; \
 			qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l.o -cwd log/$$c-$$l.sh; \
 		done; \
+	done
+
+svm_wtag:
+	@mkdir -p data/wpredicted
+	@for l in $(W2C_BALTOSLAVIC_LANGUAGES); do \
+		echo "./svm-tag.py data/models/svm-csla.p data/features/w2c/$$l.feat data/wpredicted/$$l.pred" > log/$$l.sh; \
+		echo "./merge_output.pl data/w2c/$$l.conll data/wpredicted/$$l.pred > data/wpredicted/$$l.conll" >> log/$$l.sh; \
+		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l.o -cwd log/$$l.sh; \
+	done
+	@for l in $(W2C_GERMANIC_LANGUAGES); do \
+		echo "./svm-tag.py data/models/svm-cger.p data/features/w2c/$$l.feat data/wpredicted/$$l.pred" > log/$$l.sh; \
+		echo "./merge_output.pl data/w2c/$$l.conll data/wpredicted/$$l.pred > data/wpredicted/$$l.conll" >> log/$$l.sh; \
+		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l.o -cwd log/$$l.sh; \
+	done
+	@for l in $(W2C_ROMANCE_LANGUAGES); do \
+		echo "./svm-tag.py data/models/svm-crom.p data/features/w2c/$$l.feat data/wpredicted/$$l.pred" > log/$$l.sh; \
+		echo "./merge_output.pl data/w2c/$$l.conll data/wpredicted/$$l.pred > data/wpredicted/$$l.conll" >> log/$$l.sh; \
+		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l.o -cwd log/$$l.sh; \
+	done
+	@for l in $(W2C_INDO_EUROPEAN_LANGUAGES); do \
+		echo "./svm-tag.py data/models/svm-cine.p data/features/w2c/$$l.feat data/wpredicted/$$l.pred" > log/$$l.sh; \
+		echo "./merge_output.pl data/w2c/$$l.conll data/wpredicted/$$l.pred > data/wpredicted/$$l.conll" >> log/$$l.sh; \
+		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l.o -cwd log/$$l.sh; \
+	done
+	@for l in $(W2C_AGGLUTINATING_LANGUAGES); do \
+		echo "./svm-tag.py data/models/svm-cagl.p data/features/w2c/$$l.feat data/wpredicted/$$l.pred" > log/$$l.sh; \
+		echo "./merge_output.pl data/w2c/$$l.conll data/wpredicted/$$l.pred > data/wpredicted/$$l.conll" >> log/$$l.sh; \
+		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l.o -cwd log/$$l.sh; \
+	done
+	@for l in $(W2C_OTHER_LANGUAGES); do \
+		echo "./svm-tag.py data/models/svm-c7.p data/features/w2c/$$l.feat data/wpredicted/$$l.pred" > log/$$l.sh; \
+		echo "./merge_output.pl data/w2c/$$l.conll data/wpredicted/$$l.pred > data/wpredicted/$$l.conll" >> log/$$l.sh; \
+		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l.o -cwd log/$$l.sh; \
 	done
 
 output:
