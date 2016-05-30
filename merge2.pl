@@ -17,6 +17,8 @@ while(<OF>)
 {
     my $ofline = $_;
     my $dfline = <DF>;
+    $ofline =~ s/\r?\n$//;
+    $dfline =~ s/\r?\n$//;
     my @ofields = split(/\t/, $ofline);
     my @dfields = split(/\t/, $dfline);
     # Delexicalized data: no FORM and no LEMMA.
@@ -29,7 +31,7 @@ while(<OF>)
     $ofields[5] = '_';
     # Keep the remaining fields (HEAD, DEPREL, DEPS and MISC) from the original file.
     $ofline = join("\t", @ofields);
-    print($ofline);
+    print("$ofline\n");
 }
 close(OF);
 close(DF);
