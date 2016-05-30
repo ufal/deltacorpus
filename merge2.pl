@@ -19,18 +19,21 @@ while(<OF>)
     my $dfline = <DF>;
     $ofline =~ s/\r?\n$//;
     $dfline =~ s/\r?\n$//;
-    my @ofields = split(/\t/, $ofline);
-    my @dfields = split(/\t/, $dfline);
-    # Delexicalized data: no FORM and no LEMMA.
-    $ofields[1] = '_';
-    $ofields[2] = '_';
-    # UPOS in deltafile is gold-standard tag, XPOS is predicted tag. We want the predicted tag.
-    $ofields[3] = $dfields[4];
-    $ofields[4] = $dfields[4];
-    # There are no morphological features.
-    $ofields[5] = '_';
-    # Keep the remaining fields (HEAD, DEPREL, DEPS and MISC) from the original file.
-    $ofline = join("\t", @ofields);
+    unless($ofline =~ m/^\s*$/ || $ofline =~ m/^\#/ || $ofline =~ m/^\d+-\d/)
+    {
+        my @ofields = split(/\t/, $ofline);
+        my @dfields = split(/\t/, $dfline);
+        # Delexicalized data: no FORM and no LEMMA.
+        $ofields[1] = '_';
+        $ofields[2] = '_';
+        # UPOS in deltafile is gold-standard tag, XPOS is predicted tag. We want the predicted tag.
+        $ofields[3] = $dfields[4];
+        $ofields[4] = $dfields[4];
+        # There are no morphological features.
+        $ofields[5] = '_';
+        # Keep the remaining fields (HEAD, DEPREL, DEPS and MISC) from the original file.
+        $ofline = join("\t", @ofields);
+    }
     print("$ofline\n");
 }
 close(OF);
