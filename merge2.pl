@@ -9,8 +9,8 @@ binmode(STDIN, ':utf8');
 binmode(STDOUT, ':utf8');
 binmode(STDERR, ':utf8');
 
-my $origfile = 'data/ud/train/cs.conll';
-my $deltafile = 'data/cpredicted/c7-cs.conll'; ###!!! Nemáme zvlášť označkovaná trénovací i testovací data!
+my $origfile = $ARGV[0];
+my $deltafile = $ARGV[1];
 open(OF, $origfile) or die("Cannot read $origfile: $!");
 open(DF, $deltafile) or die("Cannot read $deltafile: $!");
 while(<OF>)
