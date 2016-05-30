@@ -233,6 +233,20 @@ svm_ctag:
 		done; \
 	done
 
+svm_udtag2:
+	@mkdir -p data/cpredicted
+	@for l in $(UD_LANGUAGES); do \
+		for t in train dtest; do \
+			for c in c7; do \
+				mkdir -p data/ud/$$l/$$t; \
+				echo "./svm-tag.py data/models/svm-$$c.p data/features/$$t/$$l.feat data/ud/$$l/$$t/$$c.pred" > log/$$c-$$l-$$t.sh; \
+				echo "./merge_output.pl data/ud/$$t/$$l.conll data/ud/$$l/$$t/$$c.pred > data/ud/$$l/$$t/$$c.conll" >> log/$$c-$$l-$$t.sh; \
+				echo "./merge2.pl data/ud/$$t/$$l.conll data/ud/$$l/$$t/$$c.conll > data/ud/$$l/$$t/$$c-delex.conll" >> log/$$c-$$l-$$t.sh; \
+				qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l-$$t.o -cwd log/$$c-$$l-$$t.sh; \
+			done; \
+		done; \
+	done
+
 svm_wtag:
 	@mkdir -p data/wpredicted
 	@for l in $(W2C_BALTOSLAVIC_LANGUAGES); do \
