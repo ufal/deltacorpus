@@ -9,6 +9,11 @@ https://wiki.ufal.ms.mff.cuni.cz/user:zeman:deltacorpus
 
 
 ------------------------------------------------------------------------------
+Some old paths, valid at ÚFAL only:
+testdata -> /home/marecek/listr/delex_pos/data/test/
+w2cweb -> /net/data/W2C/W2C_WEB/2011-08/
+zhiwei -> /home/zhiwai/pos/
+------------------------------------------------------------------------------
 Legacy README (Zhiwei):
 
 Here I will introduce how my project work.
