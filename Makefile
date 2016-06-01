@@ -13,8 +13,11 @@ HAMLEDT_LANGUAGES = bg ca cs da de el en es et eu fa fi hi hu it la pt ro sk sl 
 # Exclude cu,got,grc,grc_proiel because it is not covered by W2C.
 # Exclude en_esl,ja because there are only patches for these treebanks, without words.
 # Exclude zh because word segmentation of raw text is not trivial.
-UD_DIR = /net/data/universal-dependencies-1.3
-UD_LANGUAGES = ar bg ca cs cs_cac cs_cltt da de el en en_lines es es_ancora et eu fa fi fi_ftb fr ga gl he hi hr hu id it kk la la_ittb la_proiel lv nl nl_lassysmall no pl pt pt_br ro ru ru_syntagrus sl sl_sst sv sv_lines ta tr
+#UD_DIR = /net/data/universal-dependencies-1.3
+#UD_LANGUAGES = ar bg ca cs cs_cac cs_cltt da de el en en_lines es es_ancora et eu fa fi fi_ftb fr ga gl he hi hr hu id it kk la la_ittb la_proiel lv nl nl_lassysmall no pl pt pt_br ro ru ru_syntagrus sl sl_sst sv sv_lines ta tr
+# Universal Dependencies 1.2 (November 2015)
+UD_DIR = /net/data/universal-dependencies-1.2
+UD_LANGUAGES = ar bg cs da de el en es et eu fa fi fi_ftb fr ga he hi hr hu id it la la_itt la_proiel nl no pl pt ro sl sv ta
 
 W2C_DIR = /net/data/W2C/W2C_WEB/2011-08
 # Only the languages represented in either HamleDT or UD:
@@ -32,6 +35,8 @@ W2C_OTHER_LANGUAGES = new vie ind jav mlg mri msa pam sun tgl war swa
 W2C_LANGUAGES_EXCEPT_GSW = $(W2C_BALTOSLAVIC_LANGUAGES) $(W2C_GERMANIC_LANGUAGES_EXCEPT_GSW) $(W2C_ROMANCE_LANGUAGES) $(W2C_INDO_EUROPEAN_LANGUAGES) $(W2C_AGGLUTINATING_LANGUAGES) new vie ind jav mlg mri msa pam sun tgl war swa epo ido ina vol
 W2C_LANGUAGES = gsw $(W2C_LANGUAGES_EXCEPT_GSW)
 
+ANYWHERE = -q 'all.q@*,ms-all.q@*,troja-all.q@*'
+
 w2c_to_conll:
 	@mkdir -p data/w2c
 	@zcat $(W2C_DIR)/als.txt.gz | ./text_to_conll.pl | ./filter.pl gsw | head -1000000 > data/w2c/gsw.conll
@@ -42,22 +47,25 @@ w2c_to_conll:
 	done
 	@echo
 
-conllu_to_conll:
-	@mkdir -p data/ud/train
-	@mkdir -p data/ud/dtest
-	@for l in $(UD_LANGUAGES); do \
-		cat $(UD_DIR)/*/$$l-ud-train*.conllu | ./clean_conllu.pl > data/ud/train/$$l.conll; \
-		cat $(UD_DIR)/*/$$l-ud-dev*.conllu | ./clean_conllu.pl > data/ud/dtest/$$l.conll; \
-		echo -n "$$l "; \
-	done
-	@echo
-
 hamledt2_to_conll:
 	@mkdir -p data/hamledt2/train
 	@mkdir -p data/hamledt2/dtest
 	@for l in $(HAMLEDT_LANGUAGES); do \
 		zcat $(HAMLEDT_DIR)/$$l/stanford/train/*.conll.gz > data/hamledt2/train/$$l.conll; \
 		zcat $(HAMLEDT_DIR)/$$l/stanford/test/*.conll.gz > data/hamledt2/dtest/$$l.conll; \
+		echo -n "$$l "; \
+	done
+	@echo
+
+ud_to_conll:
+	@mkdir -p data/ud
+	@for l in $(UD_LANGUAGES); do \
+		mkdir -p data/ud/$$l/train; \
+		mkdir -p data/ud/$$l/dev; \
+		mkdir -p data/ud/$$l/test; \
+		cat $(UD_DIR)/*/$$l-ud-train*.conllu | ./clean_conllu.pl > data/ud/$$l/train/$$l.conll; \
+		cat $(UD_DIR)/*/$$l-ud-dev*.conllu | ./clean_conllu.pl > data/ud/$$l/dev/$$l.conll; \
+		cat $(UD_DIR)/*/$$l-ud-test*.conllu | ./clean_conllu.pl > data/ud/$$l/test/$$l.conll; \
 		echo -n "$$l "; \
 	done
 	@echo
@@ -79,19 +87,10 @@ generate_features:
 	@mkdir -p data/features/dtest
 	@mkdir -p log
 	@for l in $(UD_LANGUAGES); do \
-		./fill_langcode.pl "python get_featurefromw2c.py data/ud/train/XX.conll data/w2c/XXX.conll \
-			20000000 data/features/train/XX.feat" $$l > log/features_$$l.sh; \
-		./fill_langcode.pl "python get_featurefromw2c.py data/ud/dtest/XX.conll data/w2c/XXX.conll \
-			20000000 data/features/dtest/XX.feat" $$l >> log/features_$$l.sh; \
-		qsub -hard -l mf=10g -l act_mem_free=10g -o log -e log -cwd log/features_$$l.sh; \
-	done
-
-generate_wfeatures:
-	@mkdir -p data/features/w2c
-	@mkdir -p log
-	@for l in $(W2C_LANGUAGES); do \
-		echo python get_featurefromw2c.py data/w2c/$$l.conll data/w2c/$$l.conll 20000000 data/features/w2c/$$l.feat > log/wfeatures_$$l.sh; \
-		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=10g -l act_mem_free=10g -j yes -o log -cwd log/wfeatures_$$l.sh; \
+		./fill_langcode.pl "python get_featurefromw2c.py data/ud/XX/train/XX.conll data/w2c/XXX.conll 20000000 data/ud/XX/train/XX.feat" $$l >  log/$$l-features.sh; \
+		./fill_langcode.pl "python get_featurefromw2c.py data/ud/XX/dev/XX.conll   data/w2c/XXX.conll 20000000 data/ud/XX/dev/XX.feat"   $$l >> log/$$l-features.sh; \
+		./fill_langcode.pl "python get_featurefromw2c.py data/ud/XX/test/XX.conll  data/w2c/XXX.conll 20000000 data/ud/XX/test/XX.feat"  $$l >> log/$$l-features.sh; \
+		qsub $(ANYWHERE) -hard -l mf=10g -l act_mem_free=10g -j yes -o log -cwd log/$$l-features.sh; \
 	done
 
 # Prepares training data for the classifier. For each target language the training data of this language is left out.
@@ -100,110 +99,16 @@ leave_one_out:
 	./leave1out.pl hamledt $(HAMLEDT_LANGUAGES)
 	./leave1out.pl $(UD_LANGUAGES)
 
-# Prepares custom mixes of training data, such as the c7 described in our LREC 2016 paper.
-# c7 ... bg ca de el hi hu tr (from HamleDT 2.0)
-hctrain:
-	@rm -rf data/features/hctrain
-	@mkdir -p data/features/hctrain
-	@echo -n "c7: "
-	@for l in bg ca de el hi hu tr ; do \
-		cat data/features/htrain/$$l.feat | head -50000 >> data/features/hctrain/c7.feat; \
-		echo -n "$$l "; \
-	done
-	@echo
-	@echo -n "csla: "
-	@for l in bg cs sl ; do \
-		cat data/features/htrain/$$l.feat | head -50000 >> data/features/hctrain/csla.feat; \
-		echo -n "$$l "; \
-	done
-	@echo
-	@echo -n "cger: "
-	@for l in de en sv ; do \
-		cat data/features/htrain/$$l.feat | head -50000 >> data/features/hctrain/cger.feat; \
-		echo -n "$$l "; \
-	done
-	@echo
-	@echo -n "crom: "
-	@for l in ca it pt ; do \
-		cat data/features/htrain/$$l.feat | head -50000 >> data/features/hctrain/crom.feat; \
-		echo -n "$$l "; \
-	done
-	@echo
-	@echo -n "cine: "
-	@for l in bg ca cs de el hi pt ; do \
-		cat data/features/htrain/$$l.feat | head -50000 >> data/features/hctrain/cine.feat; \
-		echo -n "$$l "; \
-	done
-	@echo
-	@echo -n "cagl: "
-	@for l in hu fi et tr eu cs sv ; do \
-		cat data/features/htrain/$$l.feat | head -50000 >> data/features/hctrain/cagl.feat; \
-		echo -n "$$l "; \
-	done
-	@echo
-
-# Similar mixed models but trained on Universal Dependencies data.
-ctrain:
-	@rm -rf data/features/ctrain
-	@mkdir -p data/features/ctrain
-	@echo -n "c7: "
-	@for l in bg ca de el hi hu tr ; do \
-		cat data/features/train/$$l.feat | head -50000 >> data/features/ctrain/c7.feat; \
-		echo -n "$$l "; \
-	done
-	@echo
-	@echo -n "csla: "
-	@for l in bg cs hr pl ru sl ; do \
-		cat data/features/train/$$l.feat | head -50000 >> data/features/ctrain/csla.feat; \
-		echo -n "$$l "; \
-	done
-	@echo
-	@echo -n "cger: "
-	@for l in de en no sv ; do \
-		cat data/features/train/$$l.feat | head -50000 >> data/features/ctrain/cger.feat; \
-		echo -n "$$l "; \
-	done
-	@echo
-	@echo -n "crom: "
-	@for l in ca es fr it pt ; do \
-		cat data/features/train/$$l.feat | head -50000 >> data/features/ctrain/crom.feat; \
-		echo -n "$$l "; \
-	done
-	@echo
-	@echo -n "cine: "
-	@for l in bg ca cs de el hi pt ; do \
-		cat data/features/train/$$l.feat | head -50000 >> data/features/ctrain/cine.feat; \
-		echo -n "$$l "; \
-	done
-	@echo
-	@echo -n "cagl: "
-	@for l in hu fi et tr eu cs sv ; do \
-		cat data/features/train/$$l.feat | head -50000 >> data/features/ctrain/cagl.feat; \
-		echo -n "$$l "; \
-	done
-	@echo
-
-svm_tag:
-	@mkdir -p data/predicted
-	@mkdir -p data/hpredicted
-	@for l in $(HAMLEDT_LANGUAGES); do \
-		echo "./svm.py data/features/htrain_leave1out/$$l.feat data/features/hdtest/$$l.feat data/hpredicted/$$l.pred" \
-			> log/htag_$$l.sh; \
-		qsub -hard -l mf=30g -l act_mem_free=30g -o log/htag_$$l.o -e log/htag_$$l.e -cwd log/htag_$$l.sh; \
-	done
-	@for l in $(UD_LANGUAGES); do \
-		echo "./svm.py data/features/train_leave1out/$$l.feat data/features/dtest/$$l.feat data/predicted/$$l.pred" \
-			> log/tag_$$l.sh; \
-		qsub -hard -l mf=30g -l act_mem_free=30g -o log/tag_$$l.o -e log/tag_$$l.e -cwd log/tag_$$l.sh; \
-	done
-
 # Train a model that will be reused to tag multiple languages.
 # Save the model as a Python pickle file. Do not do the tagging.
-svm_hctrain:
-	@mkdir -p data/models
-	@for c in c7 csla cger crom cine cagl; do \
-		echo "./svm-train.py data/features/hctrain/$$c.feat data/models/svm-$$c-h.p" > log/svm-$$c-htrain.sh; \
-		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/svm-$${c}-htrain.o -cwd log/svm-$$c-htrain.sh; \
+svm_train:
+	@for l in $(UD_LANGUAGES); do \
+		echo "./svm-train.py data/ud/$$l/train/$$l.feat data/ud/$$l/train/$$l.p" > log/$$l-svmtrain.sh; \
+		qsub $(ANYWHERE) -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l-svmtrain.o -cwd log/$$l-svmtrain.sh; \
+		for c in all c7 csla cger crom cine cagl; do \
+			echo "./svm-train.py data/ud/$$l/multitrain/$$c.feat data/ud/$$l/multitrain/$$c.p" > log/$$l-$$c-svmtrain.sh; \
+			qsub $(ANYWHERE) -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l-$$c-svmtrain.o -cwd log/$$l-$$c-svmtrain.sh; \
+		done; \
 	done
 
 # Train a model for multiple languages on Universal Dependencies.
@@ -227,61 +132,13 @@ svm_ctag:
 	@mkdir -p data/cpredicted
 	@for l in $(UD_LANGUAGES); do \
 		for c in c7 csla cger crom cine cagl; do \
-			echo "./svm-tag.py data/models/svm-$$c.p data/features/dtest/$$l.feat data/cpredicted/$$c-$$l.pred" > log/$$c-$$l.sh; \
-			echo "./merge_output.pl data/ud/dtest/$$l.conll data/cpredicted/$$c-$$l.pred > data/cpredicted/$$c-$$l.conll" >> log/$$c-$$l.sh; \
+			echo "./svm-tag.py data/models/svm-$$c.p data/features/hdtest/$$l.feat data/cpredicted/$$c-$$l.pred" > log/$$c-$$l.sh; \
 			qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l.o -cwd log/$$c-$$l.sh; \
 		done; \
 	done
 
-svm_udtag2:
-	@mkdir -p data/cpredicted
-	@for l in $(UD_LANGUAGES); do \
-		for t in train dtest; do \
-			for c in c7; do \
-				mkdir -p data/ud/$$l/$$t; \
-				echo "./svm-tag.py data/models/svm-$$c.p data/features/$$t/$$l.feat data/ud/$$l/$$t/$$c.pred" > log/$$c-$$l-$$t.sh; \
-				echo "./merge_output.pl data/ud/$$t/$$l.conll data/ud/$$l/$$t/$$c.pred > data/ud/$$l/$$t/$$c.conll" >> log/$$c-$$l-$$t.sh; \
-				echo "./merge2.pl data/ud/$$t/$$l.conll data/ud/$$l/$$t/$$c.conll > data/ud/$$l/$$t/$$c-delex.conll" >> log/$$c-$$l-$$t.sh; \
-				qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l-$$t.o -cwd log/$$c-$$l-$$t.sh; \
-			done; \
-		done; \
-	done
-
-svm_wtag:
-	@mkdir -p data/wpredicted
-	@for l in $(W2C_BALTOSLAVIC_LANGUAGES); do \
-		echo "./svm-tag.py data/models/svm-csla.p data/features/w2c/$$l.feat data/wpredicted/$$l.pred" > log/$$l.sh; \
-		echo "./merge_output.pl data/w2c/$$l.conll data/wpredicted/$$l.pred > data/wpredicted/$$l.conll" >> log/$$l.sh; \
-		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l.o -cwd log/$$l.sh; \
-	done
-	@for l in $(W2C_GERMANIC_LANGUAGES); do \
-		echo "./svm-tag.py data/models/svm-cger.p data/features/w2c/$$l.feat data/wpredicted/$$l.pred" > log/$$l.sh; \
-		echo "./merge_output.pl data/w2c/$$l.conll data/wpredicted/$$l.pred > data/wpredicted/$$l.conll" >> log/$$l.sh; \
-		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l.o -cwd log/$$l.sh; \
-	done
-	@for l in $(W2C_ROMANCE_LANGUAGES); do \
-		echo "./svm-tag.py data/models/svm-crom.p data/features/w2c/$$l.feat data/wpredicted/$$l.pred" > log/$$l.sh; \
-		echo "./merge_output.pl data/w2c/$$l.conll data/wpredicted/$$l.pred > data/wpredicted/$$l.conll" >> log/$$l.sh; \
-		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l.o -cwd log/$$l.sh; \
-	done
-	@for l in $(W2C_INDO_EUROPEAN_LANGUAGES); do \
-		echo "./svm-tag.py data/models/svm-cine.p data/features/w2c/$$l.feat data/wpredicted/$$l.pred" > log/$$l.sh; \
-		echo "./merge_output.pl data/w2c/$$l.conll data/wpredicted/$$l.pred > data/wpredicted/$$l.conll" >> log/$$l.sh; \
-		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l.o -cwd log/$$l.sh; \
-	done
-	@for l in $(W2C_AGGLUTINATING_LANGUAGES); do \
-		echo "./svm-tag.py data/models/svm-cagl.p data/features/w2c/$$l.feat data/wpredicted/$$l.pred" > log/$$l.sh; \
-		echo "./merge_output.pl data/w2c/$$l.conll data/wpredicted/$$l.pred > data/wpredicted/$$l.conll" >> log/$$l.sh; \
-		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l.o -cwd log/$$l.sh; \
-	done
-	@for l in $(W2C_OTHER_LANGUAGES); do \
-		echo "./svm-tag.py data/models/svm-c7.p data/features/w2c/$$l.feat data/wpredicted/$$l.pred" > log/$$l.sh; \
-		echo "./merge_output.pl data/w2c/$$l.conll data/wpredicted/$$l.pred > data/wpredicted/$$l.conll" >> log/$$l.sh; \
-		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l.o -cwd log/$$l.sh; \
-	done
-
 output:
-	@for l in $(UD_LANGUAGES); do \
+	@for l in $(UD_LANGUAGES) $(UD2(LANGUAGES); do \
 		echo -n "$$l "; \
 		./merge_output.pl data/ud/dtest/$$l.conll data/predicted/$$l.pred > data/predicted/$$l.conll; \
 	done
