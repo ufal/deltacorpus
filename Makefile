@@ -128,3 +128,15 @@ svm_tag:
 			qsub $(ANYWHERE) -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l-svmtag.o -cwd log/$$c-$$l-svmtag.sh; \
 		done; \
 	done
+
+# We have to tag the training data as well. We will need them for delexicalized parsing.
+# There is no conflict because the delexicalized tagger for the language has never been trained on the same language (we omit the $$l-$$l model in this case).
+svm_tag_training_data:
+	@for l in $(UD_LANGUAGES); do \
+		for c in all c7 csla cger crom cine cagl; do \
+			echo "./svm-tag.py data/ud/$$l/multitrain/$$c.p data/ud/$$l/train/$$l.feat data/ud/$$l/train/$$c-$$l.pred" > log/$$c-$$l-svmtagtrdata.sh; \
+			echo "./merge_output.pl data/ud/$$l/train/$$l.conll data/ud/$$l/train/$$c-$$l.pred > data/ud/$$l/train/$$c-$$l.conll" >> log/$$c-$$l-svmtagtrdata.sh; \
+			echo "./merge2.pl data/ud/$$l/train/$$l.conll data/ud/$$l/train/$$c-$$l.conll > data/ud/$$l/train/$$c-$$l.2.conll" >> log/$$c-$$l-svmtagtrdata.sh; \
+			qsub $(ANYWHERE) -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l-svmtagtrdata.o -cwd log/$$c-$$l-svmtagtrdata.sh; \
+		done; \
+	done
