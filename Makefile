@@ -123,8 +123,8 @@ svm_tag:
 		qsub $(ANYWHERE) -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l-$$l-svmtag.o -cwd log/$$l-$$l-svmtag.sh; \
 		for c in all c7 csla cger crom cine cagl; do \
 			echo "./svm-tag.py data/ud/$$l/multitrain/$$c.p data/ud/$$l/dev/$$l.feat data/ud/$$l/dev/$$c-$$l.pred" > log/$$c-$$l-svmtag.sh; \
-			echo "./merge_output.pl data/ud/$$l/dev/$$l.conll data/ud/$$l/dev/$$c-$$l.pred > data/ud/$$l/dev/$$c-$$l.conll" >> log/$$c-$$l-svmtag.sh \
-			echo "./merge2.pl data/ud/$$l/dev/$$l.conll data/ud/$$l/dev/$$c-$$l.conll > data/ud/$$l/dev/$$c-$$l.2.conll" >> log/$$c-$$l-svmtag.sh \
-			qsub -q $(ANYWHERE) -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l-svmtag.o -cwd log/$$c-$$l-svmtag.sh; \
+			echo "./merge_output.pl data/ud/$$l/dev/$$l.conll data/ud/$$l/dev/$$c-$$l.pred > data/ud/$$l/dev/$$c-$$l.conll" >> log/$$c-$$l-svmtag.sh; \
+			echo "./merge2.pl data/ud/$$l/dev/$$l.conll data/ud/$$l/dev/$$c-$$l.conll > data/ud/$$l/dev/$$c-$$l.2.conll" >> log/$$c-$$l-svmtag.sh; \
+			qsub $(ANYWHERE) -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l-svmtag.o -cwd log/$$c-$$l-svmtag.sh; \
 		done; \
 	done
