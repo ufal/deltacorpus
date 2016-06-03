@@ -9,6 +9,50 @@ binmode(STDIN, ':utf8');
 binmode(STDOUT, ':utf8');
 binmode(STDERR, ':utf8');
 
+# The Universal POS tagset of UD has 17 tags, the older Google Universal POS tagset has 12 tags. A smaller tagset should be easier to predict.
+# To make things more comparable, it is optionally possible to collapse certain tag groups into one tag.
+###!!! Note: If we map the tags before training, the results will be different. I bet that the accuracy will be higher but it is not guaranteed.
+my %tagmap =
+(
+    'ADJ'   => 'ADJ',
+    'ADP'   => 'ADP',
+    'ADV'   => 'ADV',
+    'AUX'   => 'AUX',
+    'CONJ'  => 'CONJ',
+    'DET'   => 'DET',
+    'INTJ'  => 'INTJ',
+    'NOUN'  => 'NOUN',
+    'NUM'   => 'NUM',
+    'PART'  => 'PART',
+    'PRON'  => 'PRON',
+    'PROPN' => 'PROPN',
+    'PUNCT' => 'PUNCT',
+    'SCONJ' => 'SCONJ',
+    'SYM'   => 'SYM',
+    'VERB'  => 'VERB',
+    'X'     => 'X',
+);
+my %tagmap_google_to_ud =
+(
+    'ADJ'   => 'ADJ',
+    'ADP'   => 'ADP',
+    'ADV'   => 'ADV',
+    'AUX'   => 'VERB',
+    'CONJ'  => 'CONJ',
+    'DET'   => 'DET',
+    'INTJ'  => 'X',
+    'NOUN'  => 'NOUN',
+    'NUM'   => 'NUM',
+    'PART'  => 'X',
+    'PRON'  => 'PRON',
+    'PROPN' => 'NOUN',
+    'PUNCT' => 'PUNCT',
+    'SCONJ' => 'CONJ',
+    'SYM'   => 'PUNCT',
+    'VERB'  => 'VERB',
+    'X'     => 'X',
+);
+
 # /home/zhiwai/pos/model/svm/predictlabel, for example c7_cs_20000000_20000000.txt
 while(<>)
 {
@@ -20,8 +64,8 @@ while(<>)
     # Expected three tab-separated fields: word form, gold tag, predicted tag.
     my @fields = split(/\s+/, $_);
     my $form = $fields[0];
-    my $gtag = $fields[1];
-    my $ptag = $fields[2];
+    my $gtag = $tagmap{$fields[1]};
+    my $ptag = $tagmap{$fields[2]};
     if($ptag eq $gtag)
     {
         $nok++;
