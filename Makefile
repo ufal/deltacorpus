@@ -111,34 +111,20 @@ svm_train:
 		done; \
 	done
 
-# Train a model for multiple languages on Universal Dependencies.
-svm_ctrain:
-	@mkdir -p data/models
-	@for c in c7 csla cger crom cine cagl; do \
-		echo "./svm-train.py data/features/ctrain/$$c.feat data/models/svm-$$c.p" > log/svm-$$c-train.sh; \
-		qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/svm-$$c-train.o -cwd log/svm-$$c-train.sh; \
-	done
-
-svm_hctag:
-	@mkdir -p data/hcpredicted
-	@for l in $(HAMLEDT_LANGUAGES); do \
-		for c in c7 csla cger crom cine cagl; do \
-			echo "./svm-tag.py data/models/svm-$$c-h.p data/features/hdtest/$$l.feat data/hcpredicted/$$c-$$l.pred" > log/$$c-$$l-h.sh; \
-			qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l-h.o -cwd log/$$c-$$l-h.sh; \
-		done; \
-	done
-
-svm_ctag:
-	@mkdir -p data/cpredicted
+# The output from Zhiwei's tagger (the .pred file) omits sentence boundaries and has a special section with OOV words at the end.
+# The script merge_output.pl will restore it as a CoNLL-X file and at the same time it will compute tagging accuracy.
+# However, it will not restore the original CoNLL file with all the dependency annotation, ready for further processing.
+# That's why we subsequently call merge2.pl.
+svm_tag:
 	@for l in $(UD_LANGUAGES); do \
-		for c in c7 csla cger crom cine cagl; do \
-			echo "./svm-tag.py data/models/svm-$$c.p data/features/hdtest/$$l.feat data/cpredicted/$$c-$$l.pred" > log/$$c-$$l.sh; \
-			qsub -q 'all.q@*,ms-all.q@*,troja-all.q@*' -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l.o -cwd log/$$c-$$l.sh; \
+		echo "./svm-tag.py data/ud/$$l/train/$$l.p data/ud/$$l/dev/$$l.feat data/ud/$$l/dev/$$l-$$l.pred" > log/$$l-$$l-svmtag.sh; \
+		echo "./merge_output.pl data/ud/$$l/dev/$$l.conll data/ud/$$l/dev/$$l-$$l.pred > data/ud/$$l/dev/$$l-$$l.conll" >> log/$$l-$$l-svmtag.sh; \
+		echo "./merge2.pl data/ud/$$l/dev/$$l.conll data/ud/$$l/dev/$$l-$$l.conll > data/ud/$$l/dev/$$l-$$l.2.conll" >> log/$$l-$$l-svmtag.sh; \
+		qsub $(ANYWHERE) -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$l-$$l-svmtag.o -cwd log/$$l-$$l-svmtag.sh; \
+		for c in all c7 csla cger crom cine cagl; do \
+			echo "./svm-tag.py data/ud/$$l/multitrain/$$c.p data/ud/$$l/dev/$$l.feat data/ud/$$l/dev/$$c-$$l.pred" > log/$$c-$$l-svmtag.sh; \
+			echo "./merge_output.pl data/ud/$$l/dev/$$l.conll data/ud/$$l/dev/$$c-$$l.pred > data/ud/$$l/dev/$$c-$$l.conll" >> log/$$c-$$l-svmtag.sh \
+			echo "./merge2.pl data/ud/$$l/dev/$$l.conll data/ud/$$l/dev/$$c-$$l.conll > data/ud/$$l/dev/$$c-$$l.2.conll" >> log/$$c-$$l-svmtag.sh \
+			qsub -q $(ANYWHERE) -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l-svmtag.o -cwd log/$$c-$$l-svmtag.sh; \
 		done; \
-	done
-
-output:
-	@for l in $(UD_LANGUAGES) $(UD2(LANGUAGES); do \
-		echo -n "$$l "; \
-		./merge_output.pl data/ud/dtest/$$l.conll data/predicted/$$l.pred > data/predicted/$$l.conll; \
 	done
