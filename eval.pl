@@ -8,6 +8,13 @@ use open ':utf8';
 binmode(STDIN, ':utf8');
 binmode(STDOUT, ':utf8');
 binmode(STDERR, ':utf8');
+use Getopt::Long;
+
+my $show_baseline = 0;
+GetOptions
+(
+    'baseline' => \$show_baseline
+);
 
 # The Universal POS tagset of UD has 17 tags, the older Google Universal POS tagset has 12 tags. A smaller tagset should be easier to predict.
 # To make things more comparable, it is optionally possible to collapse certain tag groups into one tag.
@@ -66,6 +73,21 @@ while(<>)
     my $form = $fields[0];
     my $gtag = $tagmap{$fields[1]};
     my $ptag = $tagmap{$fields[2]};
+    if($show_baseline)
+    {
+        if($form =~ m/^\pP+$/)
+        {
+            $ptag = 'PUNCT';
+        }
+        elsif($form =~ m/^\d+([\.,]\d+)?$/)
+        {
+            $ptag = 'NUM';
+        }
+        else
+        {
+            $ptag = 'NOUN';
+        }
+    }
     if($ptag eq $gtag)
     {
         $nok++;
