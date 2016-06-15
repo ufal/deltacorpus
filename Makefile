@@ -83,14 +83,20 @@ generate_hfeatures:
 	done
 
 generate_features:
-	@mkdir -p data/features/train
-	@mkdir -p data/features/dtest
 	@mkdir -p log
 	@for l in $(UD_LANGUAGES); do \
 		./fill_langcode.pl "python get_featurefromw2c.py data/ud/XX/train/XX.conll data/w2c/XXX.conll 20000000 data/ud/XX/train/XX.feat" $$l >  log/$$l-features.sh; \
 		./fill_langcode.pl "python get_featurefromw2c.py data/ud/XX/dev/XX.conll   data/w2c/XXX.conll 20000000 data/ud/XX/dev/XX.feat"   $$l >> log/$$l-features.sh; \
 		./fill_langcode.pl "python get_featurefromw2c.py data/ud/XX/test/XX.conll  data/w2c/XXX.conll 20000000 data/ud/XX/test/XX.feat"  $$l >> log/$$l-features.sh; \
 		qsub $(ANYWHERE) -hard -l mf=10g -l act_mem_free=10g -j yes -o log -cwd log/$$l-features.sh; \
+	done
+
+generate_features_w2c:
+	@mkdir -p log
+	@for l in $(W2C_LANGUAGES); do \
+		echo python get_featurefromw2c.py data/w2c/$$l.conll data/w2c/$$l.conll 20000000 data/w2c/$$l.feat > log/$$l-features-w2c.sh; \
+		echo rm data/w2c/$$l.feat.oov >> log/$$l-features-w2c.sh; \
+		qsub $(ANYWHERE) -hard -l mf=10g -l act_mem_free=10g -j yes -o log -cwd log/$$l-features-w2c.sh; \
 	done
 
 # Prepares training data for the classifier. For each target language the training data of this language is left out.
@@ -137,6 +143,21 @@ svm_tag_training_data:
 			echo "./svm-tag.py data/ud/$$l/multitrain/$$c.p data/ud/$$l/train/$$l.feat data/ud/$$l/train/$$c-$$l.pred" > log/$$c-$$l-svmtagtrdata.sh; \
 			echo "./merge_output.pl data/ud/$$l/train/$$l.conll data/ud/$$l/train/$$c-$$l.pred > data/ud/$$l/train/$$c-$$l.conll" >> log/$$c-$$l-svmtagtrdata.sh; \
 			echo "./merge2.pl data/ud/$$l/train/$$l.conll data/ud/$$l/train/$$c-$$l.conll > data/ud/$$l/train/$$c-$$l.2.conll" >> log/$$c-$$l-svmtagtrdata.sh; \
+			qsub $(ANYWHERE) -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l-svmtagtrdata.o -cwd log/$$c-$$l-svmtagtrdata.sh; \
+		done; \
+	done
+
+# And this is how we tag the W2C data and create Deltacorpus.
+# We don't really need to exclude the target language from the source in this case because the result will not be used for evaluation.
+# And we want the output as good as possible.
+# We could create a separate set of models where no language was excluded but that would be an extra effort that is not absolutely needed.
+# Instead, we will use the models for Latin. The three Latin treebanks will be excluded, which probably does not hurt too much, they are not too consistent anyway.
+svm_tag_w2c:
+	@for l in $(W2C_LANGUAGES); do \
+		for c in all cine csla cger crom cagl; do \
+			echo "./svm-tag.py data/ud/la/multitrain/$$c.p data/w2c/$$l.feat data/w2c/$$c-$$l.pred" > log/$$c-$$l-svmtagtrdata.sh; \
+			echo "./merge_output.pl data/w2c/$$l.conll data/w2c/$$c-$$l.pred > data/w2c/$$c-$$l.conll" >> log/$$c-$$l-svmtagtrdata.sh; \
+			echo "./merge2.pl data/w2c/$$l.conll data/w2c/$$c-$$l.conll > data/w2c/$$c-$$l.2.conll" >> log/$$c-$$l-svmtagtrdata.sh; \
 			qsub $(ANYWHERE) -hard -l mf=30g -l act_mem_free=30g -j yes -o log/$$c-$$l-svmtagtrdata.o -cwd log/$$c-$$l-svmtagtrdata.sh; \
 		done; \
 	done
