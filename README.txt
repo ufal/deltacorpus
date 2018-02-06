@@ -6,7 +6,7 @@ http://ufal.mff.cuni.cz/deltacorpus
 http://hdl.handle.net/11234/1-1662
 https://github.com/ufal/deltacorpus
 https://wiki.ufal.ms.mff.cuni.cz/user:zeman:deltacorpus
-
+http://www.lrec-conf.org/proceedings/lrec2016/pdf/709_Paper.pdf
 
 ------------------------------------------------------------------------------
 Some old paths, valid at ÚFAL only:
